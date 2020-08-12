@@ -10,10 +10,16 @@ Created on Tue Aug 11 09:38:24 2020
 import profile_parser as pp
 
 # samples [sample #] [rank] [taxid] --->> Abundance
+'''
+Data Tree:
+    - {sample # : set}
+                   - {TaxIDs}
+'''
+
 
 #%% FUNCTIONS
 
-def getTaxID(sample):
+def get_tax_ID(sample):
     '''
     
     Parameters
@@ -23,19 +29,19 @@ def getTaxID(sample):
 
     Returns
     -------
-    tid : set
+    tax_id : set
         filled with taxIDs from the dictionary sample
 
     '''
-    tid = set()
+    tax_id = set()
     
-    for r in sample:
-        for t in sample[r]:
-            tid.add(t)
-    print("done adding.")
-    return tid
+    for rank in sample:
+        for tid in sample[rank]:
+            tax_id.add(tid)
+    #print("done adding.")
+    return tax_id
 
-def saveTaxID(samples):
+def save_tax_ID(samples):
     '''
 
     Parameters
@@ -54,18 +60,18 @@ def saveTaxID(samples):
     taxIDs = {}
     
     for n in range(len(samples)):
-        taxIDs[n] = getTaxID(samples[n])
-    print("done indexing.")
+        taxIDs[n] = get_tax_ID(samples[n])
+    #print("done indexing.")
     return taxIDs
 
-def _cTID(t1, t2):
+def _common_tax_ID(tax_id_1, tax_id_2):
     '''
     
     Parameters
     ----------
-    t1 : set
+    tax_id_1 : set
         of TaxIDs from a sample
-    t2 : set
+    tax_id_2 : set
         of TaxIDs from a sample
 
     Returns
@@ -74,43 +80,43 @@ def _cTID(t1, t2):
         with the values both sets share
 
     '''
-    print("done comparing.")
-    return t1 & t2
+    #print("done comparing.")
+    return tax_id_1 & tax_id_2
 
-def commonTID(tid1, tid2):
+def common_tax_ID(tax_id_1, tax_id_2):
     '''
 
     Parameters
     ----------
-    tid1 : dictionary
+    tax_id_1 : dictionary
         where sample # is the key and a set of taxIDs from that sample is the 
         value
-    tid2 : dictionary
+    tax_id_2 : dictionary
         where sample # is the key and a set of taxIDs from that sample is the 
         value
 
     Returns
     -------
-    comDP : dictionary
+    common_data_points : dictionary
         where the sample # is the key and a set with the overlapping data points
         between the two samples is the value
 
     '''
-    comDP = {}
+    common_data_points = {}
     
-    for n in tid1:
-        comDP[n] = _cTID(tid1[n], tid2[n])
+    for n in tax_id_1:
+        common_data_points[n] = _common_tax_ID(tax_id_1[n], tax_id_2[n])
     
-    return comDP
+    return common_data_points
 
-def _coTID(t1, t2):
+def _combine_tax_ID(tax_id_1, tax_id_2):
     '''
 
     Parameters
     ----------
-    t1 : set
+    tax_id_1 : set
         with TaxIDs from one sample
-    t2 : set
+    tax_id_2 : set
         with TaxIDs from one sample
 
     Returns
@@ -119,43 +125,43 @@ def _coTID(t1, t2):
         combined set of t1 and t2 with no repeated values
 
     '''
-    print("done combining.")
-    return t1 | t2
+    #print("done combining.")
+    return tax_id_1 | tax_id_2
 
-def combineTID(tid1, tid2):
+def combineTID(tax_id_1, tax_id_2):
     '''
 
     Parameters
     ----------
-    tid1 : dictionary
+    tax_id_1 : dictionary
         where sample # is the key and a set with TaxIDs from that sample is 
         the value
-    tid2 : dictionary
+    tax_id_2 : dictionary
         where sample # is the key and a set with TaxIDs from that sample is 
         the value
 
     Returns
     -------
-    combTID : dictionary
+    combined_tax_IDs : dictionary
         where the sample # is the key and a set of the combined data points 
         (with no repeats) is the value
 
     '''
-    combTID = {}
+    combined_tax_IDs = {}
     
-    for n in tid1:
-        combTID[n] = (_coTID(tid1[n], tid2[n]))
-    print("done listing")
-    return combTID
+    for n in tax_id_1:
+        combined_tax_IDs[n] = (_combine_tax_ID(tax_id_1[n], tax_id_2[n]))
+    #print("done listing")
+    return combined_tax_IDs
 
-def main(f1, f2):
+def main(file1, file2):
     '''
 
     Parameters
     ----------
-    f1 : string
+    file1 : string
         the profile file name before ".profile"
-    f2 : string
+    file2 : string
         the profile file name before ".profile"
 
     Returns
@@ -163,25 +169,25 @@ def main(f1, f2):
     None.
 
     '''
-    S1 = pp.main(f1)
-    S2 = pp.main(f2)
+    Sample1 = pp.main(file1)
+    Sample2 = pp.main(file2)
     
-    t1 = saveTaxID(S1)
-    t2 = saveTaxID(S2)
+    t1 = save_tax_ID(Sample1)
+    t2 = save_tax_ID(Sample2)
     
-    comT = commonTID(t1, t2)
-    combT = combineTID(t1, t2)
+    commmon_1_2 = common_tax_ID(t1, t2)
+    combined_1_2 = combineTID(t1, t2)
     
-    print_tid(comT)
-    print_tid(combT)
+    print_tax_ID(commmon_1_2)
+    print_tax_ID(combined_1_2)
     return
 
-def print_tid(tid):
+def print_tax_ID(tax_id):
     '''
 
     Parameters
     ----------
-    tid : dictionary
+    tax_id : dictionary
         where sample # is the key and a set with taxIDs is the value
 
     Returns
@@ -189,17 +195,34 @@ def print_tid(tid):
     None.
 
     '''
-    for n in tid:
+    for n in tax_id:
         print("Sample Number:", n)
-        for t in tid[n]:
+        for t in tax_id[n]:
             print("\t\t{}".format(t))
     return
 
-'''
-Data Tree:
-    - {sample # : set}
-                   - {TaxIDs}
-'''
+def example():
+    '''
+
+    Returns
+    -------
+    None.
+
+    '''
+    a = {1 : {1,2,3}, 2 : {3,4,5}}
+    print("a - ", a)
+    b = {1 : {1,3,4}, 2 : {4,5,6}}
+    print("b - ", b, "\n")
+    
+    ab = common_tax_ID(a, b)
+    a_b  = combineTID(a, b)
+    print("COMMON:")
+    print_tax_ID(ab)
+    print()
+    print("COMBINED")
+    print_tax_ID(a_b)
+    return
+
 
 #%% MAIN
 
@@ -209,13 +232,11 @@ if __name__ == "__main__":
     S1 = pp.main(f_2[0])
     S2 = pp.main(f_2[1])
     
-    t1 = saveTaxID(S1)
-    t2 = saveTaxID(S2)
+    t1 = save_tax_ID(S1)
+    t2 = save_tax_ID(S2)
     
-    comT = commonTID(t1, t2)
+    comT = common_tax_ID(t1, t2)
     combT = combineTID(t1, t2)
     
-    print_tid(comT)
-    
-    
+    #example()
     

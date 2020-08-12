@@ -3,67 +3,94 @@
 Created on Fri Aug  7 14:52:43 2020
 
 @author: Melissa Gray
+
+Parsing profiler data
 """
 
-'''
-Parsing profiler data
-'''
+
 #%% VARIABLES
 
 # samples [sample #] [rank] [taxid] --->> Abundance
+'''
+Data Tree:
+    - {Sample # : dict}
+                - {rank : dict}
+                        - {TaxID : Abundance}
+'''
+
 
 #%% FUNCTIONS
-'''
-Input: string - first part of file name
-Output: list - of the contents of the file
 
-The ".profile" extension will be added here.
-File will be opened, read, and contents saved in a returned variable
-'''
-def getfile(f):
+def get_file(f):
+    '''
+
+    Parameters
+    ----------
+    f : string
+        first part of the profile file name (don't include the ".profile" part)
+
+    Returns
+    -------
+    contents : list
+        containing all the lines of the file as strings
+
+    '''
     filename = f + ".profile"
     file = open(filename, "r")
     contents = file.readlines()
     file.close()
     return contents
 
-'''
-Input: list - content of a profile file
-Output: list of lists with file content in them
+def divide_content(content):
+    '''
 
-Divides the file contents by sample ID
-'''
-def divContent(con):
+    Parameters
+    ----------
+    content : list
+        containing all the lines of the file as strings
+
+    Returns
+    -------
+    parts : list
+        where the elements are sections of content, separated by sample number
+
+    '''
     cutoff = "@SampleID:marmgCAMI2_short_read_sample_"
     loop = 0
     parts = []
-    c_pos = [0]
+    cutoff_pos = [0]
     
-    for l in con:
+    for l in content:
         if cutoff in l:
             loop += 1
     
     #Cycle through backwards?
     for i in range(loop):
-        c_pos.append(con.index(cutoff+str(i)+"\n", c_pos[-1]))
+        cutoff_pos.append(content.index(cutoff+str(i)+"\n", cutoff_pos[-1]))
     
     for j in range(10):
         try:
-            p = con[c_pos[j+1]:c_pos[j+2]]
+            p = content[cutoff_pos[j+1]:cutoff_pos[j+2]]
         except IndexError:
-            p = con[c_pos[j+1]:]
+            p = content[cutoff_pos[j+1]:]
         parts.append(p)
     
     return parts
 
-'''
-Input: list - a part (sample)
-Output: integer - the sample number
+def _get_sample_number(part):
+    '''
 
-Checks each string in the part list for the @SampleID line
-Takes the nunmber at the end, turns it into an integer
-'''
-def _getSampleNum(part):
+    Parameters
+    ----------
+    part : list
+        containing lines (as strings) from one sample in a profile
+
+    Returns
+    -------
+    s : int
+        the sample number
+
+    '''
     s = -1
     for line in part:
         if "@SampleID:marmgCAMI2_short_read_sample_" in line:
@@ -71,13 +98,20 @@ def _getSampleNum(part):
                 break
     return s
 
-'''
-Input: list - the split line from a part (sample)
-Output: a float - the abundance value
+def _turn_into_number(temp_l):
+    '''
 
-Turns "e" into 10^ and the string into a float number
-'''
-def _turnNum(temp_l):
+    Parameters
+    ----------
+    temp_l : list
+        a line from the sample split by tabs
+
+    Returns
+    -------
+    val : float / string
+        The abudance value from the sample line
+
+    '''
     val = 0
     
     if len(temp_l) > 1:
@@ -93,14 +127,21 @@ def _turnNum(temp_l):
                 #print("skipped:", b)
     return val
 
-'''
-Input: list - a part (sample)
-Output: list - of rank dictionaries
+def _parse_tax_id(part):
+    '''
 
-Checks which rank is in each line and saves the TaxID and Abundance value
-into its respective rank dictionary.
-'''
-def _parseTA(part):
+    Parameters
+    ----------
+    part : list
+        contains strings, one sample
+
+    Returns
+    -------
+    list
+        contains dictionaries for each taxonomic rank. The dictionaries are 
+        formatted as {tax_id : abundance}
+
+    '''
     strain = {}
     species = {}
     genus = {}
@@ -108,84 +149,133 @@ def _parseTA(part):
     order = {}
     clss = {}
     phylum = {}
-    sprkd = {}
+    superkingdom = {}
     
-    for l in part:
-        t_l = l.split("\t")
-        v = _turnNum(t_l)
+    for line in part:
+        t_l = line.split("\t")
+        val = _turn_into_number(t_l)
         if "strain" in t_l:
-            strain[t_l[0]] = v
+            strain[t_l[0]] = val
         elif "species" in t_l:
-            species[t_l[0]] = v
+            species[t_l[0]] = val
         elif "genus" in t_l:
-            genus[t_l[0]] = v
+            genus[t_l[0]] = val
         elif "family" in t_l:
-            fam[t_l[0]] = v
+            fam[t_l[0]] = val
         elif "order" in t_l:
-            order[t_l[0]] = v
+            order[t_l[0]] = val
         elif "class" in t_l:
-            clss[t_l[0]] = v
+            clss[t_l[0]] = val
         elif "phylum" in t_l:
-            phylum[t_l[0]] = v
+            phylum[t_l[0]] = val
         elif "superkingdom" in t_l:
-            sprkd[t_l[0]] = v
+            superkingdom[t_l[0]] = val
     
-    return [strain, species, genus, fam, order, clss, phylum, sprkd]
+    return [strain, species, genus, fam, order, clss, phylum, superkingdom]
 
-'''
-Input: list - of rank dicationaries, list - rank names
-Output: dictoinary - where rank name is the key and the rank dictionary is the
-value
-'''
-def _parseRank(rd, r):
-    sr = {}
+def _parse_rank(rank_list, ranks):
+    '''
+
+    Parameters
+    ----------
+    rank_list : list
+        contains dictionaries where the key is a tax_id and the value is the 
+        corresponding abundance.
+    ranks : list
+        contains strings of the taxonomic ranks, in order
+
+    Returns
+    -------
+    sample_ranks : Tdictionary
+        where the taxonomic rank (string) is the key and a dictionary of
+        {tax_id : abundance} is the value
+
+    '''
+    sample_ranks = {}
     
-    for i in range(len(rd)):
-        sr[r[i]] = rd[i]
+    for i in range(len(rank_list)):
+        sample_ranks[ranks[i]] = rank_list[i]
     
-    return sr
+    return sample_ranks
 
-'''
-Input: list - of lists of the separated sample content
-Output: dictionary - where the key is the sample number and a dictionary of 
-ranks is the value
+def parse_data(parts):
+    '''
 
-Data Tree:
-    - {Sample # : dict}
-                - {rank : dict}
-                        - {TaxID : Abundance}
+    Parameters
+    ----------
+    parts : list
+        containing lines (string) from one sample
 
-Finds, separates, and stores the various parts of data in a dictionary
-'''
-def parseData(parts):
+    Returns
+    -------
+    samples : dictionary
+        where the sample number is the key and a dictionary of dictionaries 
+        is the value (see Data Tree under 'VARIABLES' section)
+
+    '''
     samples = {}
     ranks = ["strain", "species", "genus", "family", "order", "class", "phylum", "superkingdom"]
     
     for p in parts:
-        sn = _getSampleNum(p)
+        sn = _get_sample_number(p)
         
-        pd = _parseTA(p)
-        sr = _parseRank(pd, ranks)
+        parsed_data = _parse_tax_id(p)
+        sample_ranks = _parse_rank(parsed_data, ranks)
         
-        samples[sn] = sr
+        samples[sn] = sample_ranks
             
     return samples
 
-'''
-Input: dictionary - one of the samples
-Output: formats the dictionary content
-'''
-def print_sample(n, s):
-    print("Sample Number:", n)
-    for r in s:
-        print("\tRank:", r)
-        for t in s[r]:
-            print("\t\t\t{}\t:\t{}".format(t, s[r][t]))
+def print_sample(s_num, sample):
+    '''
+
+    Parameters
+    ----------
+    s_num : int
+        the sample number
+    sample : dictionary
+        where rank (string) is the key and a dictionary of {tax_id : abundance}
+        is the value (from one sample)
+
+    Returns
+    -------
+    None.
+
+    '''
+    print("Sample Number:", s_num)
+    for rank in sample:
+        print("\tRank:", rank)
+        for tax_id in sample[rank]:
+            print("\t\t\t{}\t:\t{}".format(tax_id, sample[rank][tax_id]))
     return
 
+def main(f):
+    '''
+    # For when this file isn't being directly run
+
+    Parameters
+    ----------
+    f : string
+        first part of the profile file name (don't include the ".profile" part, 
+                                             ie. "A_1" or "C_3")
+
+    Returns
+    -------
+    samples : dictionary
+        where the sample number is the key and a dictionary of dictionaries 
+        is the value (see Data Tree under 'VARIABLES' section)
+
+    '''
+    samples = parse_data(divide_content(get_file(f)))
+    print("done.")
+    return samples
+
+
 #%% MAIN
+
 if __name__ == "__main__":
     f = input("Which file: \n")
-    Samples = parseData(divContent(getfile(f)))
+    Samples = main("A_1")
     
-    print_sample(0, Samples[0])
+    #print_sample(0, Samples[0])
+    
