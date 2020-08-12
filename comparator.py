@@ -128,7 +128,7 @@ def _combine_tax_ID(tax_id_1, tax_id_2):
     #print("done combining.")
     return tax_id_1 | tax_id_2
 
-def combineTID(tax_id_1, tax_id_2):
+def combine_tax_ID(tax_id_1, tax_id_2):
     '''
 
     Parameters
@@ -166,7 +166,12 @@ def main(file1, file2):
 
     Returns
     -------
-    None.
+    common_1_2: dictionary
+        where sample # is the key and a set of common data points between the 
+        two files is the value
+    combined_1_2: dictionary
+        where sample # is the key and a set of combined data points from the 
+        two files is the value (no repeats)
 
     '''
     Sample1 = pp.main(file1)
@@ -175,12 +180,9 @@ def main(file1, file2):
     t1 = save_tax_ID(Sample1)
     t2 = save_tax_ID(Sample2)
     
-    commmon_1_2 = common_tax_ID(t1, t2)
-    combined_1_2 = combineTID(t1, t2)
-    
-    print_tax_ID(commmon_1_2)
-    print_tax_ID(combined_1_2)
-    return
+    common_1_2 = common_tax_ID(t1, t2)
+    combined_1_2 = combine_tax_ID(t1, t2)
+    return common_1_2, combined_1_2
 
 def print_tax_ID(tax_id):
     '''
@@ -215,7 +217,7 @@ def example():
     print("b - ", b, "\n")
     
     ab = common_tax_ID(a, b)
-    a_b  = combineTID(a, b)
+    a_b  = combine_tax_ID(a, b)
     print("COMMON:")
     print_tax_ID(ab)
     print()
@@ -236,7 +238,7 @@ if __name__ == "__main__":
     t2 = save_tax_ID(S2)
     
     comT = common_tax_ID(t1, t2)
-    combT = combineTID(t1, t2)
+    combT = combine_tax_ID(t1, t2)
     
     #example()
     
