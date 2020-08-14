@@ -59,8 +59,8 @@ def save_tax_ID(samples):
     '''
     taxIDs = {}
     
-    for n in range(len(samples)):
-        taxIDs[n] = get_tax_ID(samples[n])
+    for sample_num in samples:
+        taxIDs[sample_num] = get_tax_ID(samples[sample_num])
     #print("done indexing.")
     return taxIDs
 
