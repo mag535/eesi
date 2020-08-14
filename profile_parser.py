@@ -10,6 +10,8 @@ Parsing profiler data
 
 #%% VARIABLES
 
+import re
+
 # samples [sample #] [rank] [taxid] --->> Abundance
 '''
 Data Tree:
@@ -55,7 +57,7 @@ def divide_content(content):
         where the elements are sections of content, separated by sample number
 
     '''
-    cutoff = "@SampleID:marmgCAMI2_short_read_sample_"
+    cutoff = "@SampleID:"
     loop = 0
     parts = []
     cutoff_pos = [0]
@@ -65,15 +67,27 @@ def divide_content(content):
             loop += 1
     
     #Cycle through backwards?
+    '''
     for i in range(loop):
         cutoff_pos.append(content.index(cutoff+str(i)+"\n", cutoff_pos[-1]))
     
-    for j in range(10):
+    for j in range(loop):
         try:
             p = content[cutoff_pos[j+1]:cutoff_pos[j+2]]
         except IndexError:
             p = content[cutoff_pos[j+1]:]
         parts.append(p)
+    '''
+    try:
+        content_str = ""
+        for l in content:
+            content_str += l
+        parts2 = re.split("@SampleID:", content_str)
+        parts2.pop(0)
+        for p in parts2:
+            parts.append(p.split("\n"))
+    except:
+        print("an error occured in *div_content()*.")
     
     return parts
 
@@ -91,12 +105,7 @@ def _get_sample_number(part):
         the sample number
 
     '''
-    s = -1
-    for line in part:
-        if "@SampleID:marmgCAMI2_short_read_sample_" in line:
-                s = int(line[-2])
-                break
-    return s
+    return part[0][-1]
 
 def _turn_into_number(temp_l):
     '''
@@ -113,7 +122,6 @@ def _turn_into_number(temp_l):
 
     '''
     val = 0
-    
     if len(temp_l) > 1:
         b = temp_l[-1].replace("\n", "")
         if "e" in b:
@@ -124,54 +132,19 @@ def _turn_into_number(temp_l):
                 val = float(b)
             except ValueError:
                 val = b
-                #print("skipped:", b)
     return val
 
-def _parse_tax_id(part):
-    '''
-
-    Parameters
-    ----------
-    part : list
-        contains strings, one sample
-
-    Returns
-    -------
-    list
-        contains dictionaries for each taxonomic rank. The dictionaries are 
-        formatted as {tax_id : abundance}
-
-    '''
-    strain = {}
-    species = {}
-    genus = {}
-    fam = {}
-    order = {}
-    clss = {}
-    phylum = {}
-    superkingdom = {}
+def _parse_tax_ID(part, ranks):
+    rank_tax_ids = {}
     
     for line in part:
-        t_l = line.split("\t")
-        val = _turn_into_number(t_l)
-        if "strain" in t_l:
-            strain[t_l[0]] = val
-        elif "species" in t_l:
-            species[t_l[0]] = val
-        elif "genus" in t_l:
-            genus[t_l[0]] = val
-        elif "family" in t_l:
-            fam[t_l[0]] = val
-        elif "order" in t_l:
-            order[t_l[0]] = val
-        elif "class" in t_l:
-            clss[t_l[0]] = val
-        elif "phylum" in t_l:
-            phylum[t_l[0]] = val
-        elif "superkingdom" in t_l:
-            superkingdom[t_l[0]] = val
-    
-    return [strain, species, genus, fam, order, clss, phylum, superkingdom]
+        t_l = re.split("\t| +", line)
+        for rank in ranks:
+            if rank in t_l:
+                print(t_l)
+                val = _turn_into_number(t_l)
+                rank_tax_ids[rank] = {t_l[0] : val}
+    return rank_tax_ids
 
 def _parse_rank(rank_list, ranks):
     '''
@@ -195,8 +168,18 @@ def _parse_rank(rank_list, ranks):
     
     for i in range(len(rank_list)):
         sample_ranks[ranks[i]] = rank_list[i]
-    
     return sample_ranks
+
+def _get_ranks(content):
+    ranks = []
+    
+    for line in content:
+        if "@Ranks" in line:
+            r = line.split(":")
+            ranks = r[1].split("|")
+            ranks[-1] = ranks[-1].replace("\n", "")
+            break
+    return ranks
 
 def parse_data(parts):
     '''
@@ -214,7 +197,7 @@ def parse_data(parts):
 
     '''
     samples = {}
-    ranks = ["strain", "species", "genus", "family", "order", "class", "phylum", "superkingdom"]
+    ranks = _get_ranks(parts[0])
     
     for p in parts:
         sn = _get_sample_number(p)
@@ -274,8 +257,13 @@ def main(f):
 #%% MAIN
 
 if __name__ == "__main__":
+    '''
     f = input("Which file: \n")
-    Samples = main("A_1")
+    Samples = main(f)
+    '''
+    c = get_file("pred")
+    con = divide_content(c)
     
-    #print_sample(0, Samples[0])
+    
+    print(_parse_tax_ID(con[0], _get_ranks(c)))
     
