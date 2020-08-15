@@ -8,6 +8,7 @@ Created on Thu Aug 13 15:26:55 2020
 #%% VAIABLES AND IMPORTS
 
 import numpy as np
+import pandas as pan
 import comparator as comp
 
 Truth = "truth"
@@ -157,9 +158,8 @@ def _check_true_negatives(tax_id, truth, predicted):
 def check_true_negatives(truth, predicted, combined_set):
     # TN = when tax_id is not there and it's supposed to not be there
     
-    # Use combined_set or truth_set ???
     true_negatives = {}
-    truth_set = dictionary_to_set(truth)
+    #truth_set = dictionary_to_set(truth)
     
     for tax_id in combined_set:
         true_negatives[tax_id] = _check_true_negatives(tax_id, truth, predicted)
@@ -177,7 +177,17 @@ def confusion_matrix(truth, predicted, common, combined):
     
     for tax_id in True_Pos:
         m = np.array([True_Pos[tax_id], False_Neg[tax_id], False_Pos[tax_id], True_Neg[tax_id]])
-        matrix[tax_id] = m
+        matrix[int(tax_id)] = m
+    return matrix
+
+def main(pred, t=0):
+    global Truth
+    truth = comp.save_tax_ID(comp.pp.main(Truth, t))
+    predicted = comp.save_tax_ID(comp.pp.main(pred, t))
+    
+    common, combined = comp.main(Truth, pred, t)
+    
+    matrix = confusion_matrix(truth, predicted, common, combined)
     return matrix
 
 def print_matrix(matrix):
@@ -190,16 +200,31 @@ def print_matrix(matrix):
         print("\t\t(-)\t{}\t{}\n".format(matrix[tax_id][2], matrix[tax_id][3]))
     return
 
-def setup():
-    file = input("Enter the file you're adding to the confusion matrix with \'A_1.profile\' (only type file name before \'.profile\' and separate by space):\n")
-    truth = comp.save_tax_ID(comp.pp.main(Truth))
-    predicted = comp.save_tax_ID(comp.pp.main(file))
+def _matrix_table(matrix):
+    global Truth
+    truth_other = comp.pp.main(Truth, 1)
+    other_info = {}
+    whole_matrix = []
     
-    common, combined = comp.main(Truth, file)
+    for sample in truth_other:
+        for tax_id in truth_other[sample]:
+            other_info[tax_id] = truth_other[sample][tax_id]
     
-    matrix = confusion_matrix(truth, predicted, common, combined)
+    for tax_id in matrix:
+        whole_matrix.append({tax_id : (other_info[tax_id]) + list(matrix[tax_id])})
     
-    print(matrix)
+    return whole_matrix
+
+def print_matrix_table(matrix_table):
+    '''
+    cols = ["Rank", "Name", "TP", "FN", "FP", "TN"]
+    matrix_data_frame = pan.DataFrame(data=matrix_table, columns=cols, dtype=str)
+    print(matrix_data_frame.values)
+    '''
+    print("{:^10}{:^10}{:^10}{:^10}{:^10}{:^10}{:^10}".format("Tax_id", "Rank", "Name", "TP", "FN", "FP", "TN"))
+    for d in matrix_table:
+        for tax_id in d:
+            print("{:^10}{:^10}{:^10}{:^10}{:^10}{:^10}{:^10}".format(tax_id, d[tax_id][0], d[tax_id][1], d[tax_id][2], d[tax_id][3], d[tax_id][4], d[tax_id][5]))
     return
 
 def example1():
@@ -233,11 +258,18 @@ def example2():
 if __name__ == "__main__":
     '''
     file = input("Enter the file you're adding to the confusion matrix with \'A_1.profile\' (only type file name before \'.profile\' and separate by space):\n")
-    truth = comp.save_tax_ID(pp.main(Truth))
-    predicted = comp.save_tax_ID(pp.main(file))
-    common, combined = comp.main(Truth, file)
+    truth = comp.save_tax_ID(comp.pp.main(Truth, 0))
+    predicted = comp.save_tax_ID(comp.pp.main(file, 0))
+    
+    common, combined = comp.main(Truth, file, 0)
+    
+    matrix = confusion_matrix(truth, predicted, common, combined)
+    
+    print_matrix(matrix)
     '''
     
     #example1()
-    example2()
-    #setup()
+    #example2()
+    
+    print_matrix_table(_matrix_table(main(Truth)))
+    
