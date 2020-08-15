@@ -8,7 +8,7 @@ Parsing profiler data
 """
 
 
-#%% VARIABLES
+#%% VARIABLES & IMPORTS
 
 import re
 
@@ -54,30 +54,11 @@ def divide_content(content):
     Returns
     -------
     parts : list
-        where the elements are sections of content, separated by sample number
+        where the elements are lists of sections of content, separated by sample number
 
     '''
-    cutoff = "@SampleID:"
-    loop = 0
     parts = []
-    cutoff_pos = [0]
     
-    for l in content:
-        if cutoff in l:
-            loop += 1
-    
-    #Cycle through backwards?
-    '''
-    for i in range(loop):
-        cutoff_pos.append(content.index(cutoff+str(i)+"\n", cutoff_pos[-1]))
-    
-    for j in range(loop):
-        try:
-            p = content[cutoff_pos[j+1]:cutoff_pos[j+2]]
-        except IndexError:
-            p = content[cutoff_pos[j+1]:]
-        parts.append(p)
-    '''
     try:
         content_str = ""
         for l in content:
@@ -101,8 +82,8 @@ def _get_sample_number(part):
 
     Returns
     -------
-    s : int
-        the sample number
+    int
+        the sample number in each part
 
     '''
     return int(part[0][-1])
@@ -135,6 +116,19 @@ def _turn_into_number(temp_l):
     return val
 
 def _get_ranks(content):
+    '''
+
+    Parameters
+    ----------
+    content : list
+        containing all the lines of the file as strings
+
+    Returns
+    -------
+    ranks : list
+        contains the names of the ranks in a sample
+
+    '''
     ranks = []
     
     for element in content:
@@ -147,6 +141,21 @@ def _get_ranks(content):
     return ranks
 
 def _parse_rank(rank, part):
+    '''
+
+    Parameters
+    ----------
+    rank : string
+        the name of a rank in a sample
+    part : list
+        containing lines from a sample in the file
+
+    Returns
+    -------
+    tax_id_holder : dictionary
+        where tax_id is the key and abundance is the value
+
+    '''
     tax_id_holder = {}
     
     for line in part:
@@ -157,8 +166,27 @@ def _parse_rank(rank, part):
     
     return tax_id_holder
 
-def _parse_tax_IDs(part, ranks, t=0):
-    
+def _parse_tax_IDs(part, ranks, t):
+    '''
+
+    Parameters
+    ----------
+    part : list
+        containing lines from a sample in the file
+    ranks : list
+        containing the names of ranks in a sample
+    t : integer
+        to toggle how the data will be parsed. 0 and 1 are the options. 
+        The default is 0 and it's format is shown under Data Tree under 
+        VARIABLES & IMPORTS.
+
+    Returns
+    -------
+    rank_tax_ids : dictionary
+        that can either contain rank as key and {tax_id : abundance} as value,
+        or tax_id as key and [rank, name] as value
+
+    '''
     if t == 0:
         rank_tax_ids = {}
         for r in ranks:
@@ -180,6 +208,8 @@ def parse_data(parts, t):
     ----------
     parts : list
         containing lines (string) from one sample
+    t : integer
+        to toggle the type of parsing. 0 (default) and 1 are the options
 
     Returns
     -------
@@ -203,8 +233,6 @@ def print_sample(samples):
 
     Parameters
     ----------
-    s_num : int
-        the sample number
     sample : dictionary
         where rank (string) is the key and a dictionary of {tax_id : abundance}
         is the value (from one sample)
@@ -231,6 +259,8 @@ def main(f, t=0):
     f : string
         first part of the profile file name (don't include the ".profile" part, 
                                              ie. "A_1" or "C_3")
+    t : integer, optional
+        to toggle the type of parsing. 0 (default) and 1 are the options
 
     Returns
     -------
