@@ -112,6 +112,24 @@ def check_true_positives(truth, predicted, common, combined):
     return true_positives
 
 def _check_false_negatives(tax_id, truth, predicted):
+    '''
+
+    Parameters
+    ----------
+    tax_id : integer
+        a tax_id from a sample
+    truth : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+        Used as the gold standard
+    predicted : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+
+    Returns
+    -------
+    false_negative : integer
+        the number of false positives for the tax_id
+
+    '''
     false_negative = 0
     
     for sample_num in predicted:
@@ -120,7 +138,30 @@ def _check_false_negatives(tax_id, truth, predicted):
     return false_negative
 
 def check_false_negatives(truth, predicted, common, combined_set):
+    '''
+
+    Parameters
+    ----------
+    truth : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+        Used as the gold standard
+    predicted : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+    common : dictionary
+        where sample number is the key and a set of tax_IDs found in both 
+        truth and predicted is the value
+    combined: dictionary
+        where sample number is the key and a set of tax_IDs from both 
+        truth and predicted is the value
+
+    Returns
+    -------
+    false_negatives : dictionary
+        where tax_id is the key and the number of false negatives is the value
+
+    '''
     # FN = when the tax_id is supposed to be there but it's not
+    
     false_negatives = {}
     common_set = dictionary_to_set(common)
     
@@ -132,6 +173,24 @@ def check_false_negatives(truth, predicted, common, combined_set):
     return false_negatives
 
 def _check_false_positives(tax_id, truth, predicted):
+    '''
+
+    Parameters
+    ----------
+    tax_id : integer
+        a tax_id from a sample
+    truth : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+        Used as the gold standard
+    predicted : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+
+    Returns
+    -------
+    false_positive : integer
+        the number of false positives for the tax_id
+
+    '''
     false_positive = 0
     
     for sample_num in predicted:
@@ -140,6 +199,25 @@ def _check_false_positives(tax_id, truth, predicted):
     return false_positive
 
 def check_false_positives(truth, predicted, combined_set):
+    '''
+
+    Parameters
+    ----------
+    truth : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+        Used as the gold standard
+    predicted : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+    combined_set : set
+        containing all the tax_ids from truth and predicted.
+
+    Returns
+    -------
+    false_positives : dictionary
+        where tax_id is the key and the number of false postives for that 
+        tax_id
+
+    '''
     # FP = when tax_id is there but it's not supposed to be
     false_positives = {}
     
@@ -148,6 +226,24 @@ def check_false_positives(truth, predicted, combined_set):
     return false_positives
 
 def _check_true_negatives(tax_id, truth, predicted):
+    '''
+
+    Parameters
+    ----------
+    tax_id : integer
+        a tax_id from a sample
+    truth : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+        Used as the gold standard
+    predicted : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+
+    Returns
+    -------
+    true_negative : integer
+        the number of true positives for the tax_id
+
+    '''
     true_negative = 0
     
     for sample_num in truth:
@@ -156,6 +252,25 @@ def _check_true_negatives(tax_id, truth, predicted):
     return true_negative
 
 def check_true_negatives(truth, predicted, combined_set):
+    '''
+
+    Parameters
+    ----------
+    truth : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+        Used as the gold standard
+    predicted : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+    combined_set : set
+        containing all the tax_ids from truth and predicted.
+
+    Returns
+    -------
+    true_negatives : dictionary
+        where tax_id is the key and the number of true negatives for that 
+        tax_id is the value
+
+    '''
     # TN = when tax_id is not there and it's supposed to not be there
     
     true_negatives = {}
@@ -166,6 +281,29 @@ def check_true_negatives(truth, predicted, combined_set):
     return true_negatives
 
 def confusion_matrix(truth, predicted, common, combined):
+    '''
+
+    Parameters
+    ----------
+    truth : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+        Used as the gold standard
+    predicted : dictionary
+        where sample number is the key and a set of tax_IDs is the value
+    common : dictionary
+        where sample number is the key and a set of tax_IDs found in both 
+        truth and predicted is the value
+    combined: dictionary
+        where sample number is the key and a set of tax_IDs from both 
+        truth and predicted is the value
+
+    Returns
+    -------
+    matrix : dictionary
+        where tax_id is the key and an array of its true positives, false 
+        negatives, false positives, and true negatives is the value
+
+    '''
     matrix = {}
     
     combined_set = dictionary_to_set(combined)      # universal set
@@ -181,6 +319,23 @@ def confusion_matrix(truth, predicted, common, combined):
     return matrix
 
 def main(pred, t=0):
+    '''
+
+    Parameters
+    ----------
+    pred : string
+        first part of the profile file name (don't include the ".profile" part, 
+                                             ie. "A_1" or "C_3")
+    t : integer, optional
+        to toggle the type of parsing. 0 (default) and 1 are the options
+
+    Returns
+    -------
+    matrix : dictionary
+        where tax_id is the key and an array of its true positives, false 
+        negatives, false positives, and true negatives is the value
+
+    '''
     global Truth
     truth = comp.save_tax_ID(comp.pp.main(Truth, t))
     predicted = comp.save_tax_ID(comp.pp.main(pred, t))
@@ -191,6 +346,21 @@ def main(pred, t=0):
     return matrix
 
 def print_matrix(matrix):
+    '''
+
+    Parameters
+    ----------
+    matrix : dictionary
+        where tax_id is the key and an array of its true positives, false 
+        negatives, false positives, and true negatives is the value
+
+    Returns
+    -------
+    None.
+
+    '''
+    # For viewing
+    
     for tax_id in matrix:
         print("Tax ID:", tax_id)
         print("\t\t\tPREDICTED")
@@ -201,6 +371,21 @@ def print_matrix(matrix):
     return
 
 def _matrix_table(matrix):
+    '''
+
+    Parameters
+    ----------
+    matrix : dictionary
+        where tax_id is the key and an array of its true positives, false 
+        negatives, false positives, and true negatives is the value
+
+    Returns
+    -------
+    whole_matrix : dictionary
+        where tax_id is the key and a list of 
+        [rank, name, abundance, TP, FN, FP, TN] is the value
+
+    '''
     global Truth
     truth_other = comp.pp.main(Truth, 1)
     other_info = {}
@@ -216,6 +401,18 @@ def _matrix_table(matrix):
     return whole_matrix
 
 def print_matrix_table(matrix_table):
+    '''
+
+    Parameters
+    ----------
+    matrix_table : list
+        containing {tax_id : [rank, name, TP, FN, FP, TN]}
+
+    Returns
+    -------
+    None.
+
+    '''
     '''
     cols = ["Rank", "Name", "TP", "FN", "FP", "TN"]
     matrix_data_frame = pan.DataFrame(data=matrix_table, columns=cols, dtype=str)
