@@ -154,7 +154,7 @@ def combine_tax_ID(tax_id_1, tax_id_2):
     #print("done listing")
     return combined_tax_IDs
 
-def main(file1, file2):
+def main(file1, file2, t=0):
     '''
 
     Parameters
@@ -174,14 +174,15 @@ def main(file1, file2):
         two files is the value (no repeats)
 
     '''
-    Sample1 = pp.main(file1)
-    Sample2 = pp.main(file2)
+    Sample1 = pp.main(file1, t)
+    Sample2 = pp.main(file2, t)
     
     t1 = save_tax_ID(Sample1)
     t2 = save_tax_ID(Sample2)
     
     common_1_2 = common_tax_ID(t1, t2)
     combined_1_2 = combine_tax_ID(t1, t2)
+    #print("done (comp).")
     return common_1_2, combined_1_2
 
 def print_tax_ID(tax_id):
@@ -231,8 +232,8 @@ def example():
 if __name__ == "__main__":
     f = input("Which two files do you want to compare \n (only type file name before \'.profile\' and separate by space):\n")
     f_2 = f.split(" ")
-    S1 = pp.main(f_2[0])
-    S2 = pp.main(f_2[1])
+    S1 = pp.main(f_2[0], 0)
+    S2 = pp.main(f_2[1], 0)
     
     t1 = save_tax_ID(S1)
     t2 = save_tax_ID(S2)

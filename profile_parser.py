@@ -17,7 +17,7 @@ import re
 Data Tree:
     - {Sample # : dict}
                 - {rank : dict}
-                        - {TaxID : Abundance}
+                        - {tax_id : abundance}
 '''
 
 
@@ -105,7 +105,7 @@ def _get_sample_number(part):
         the sample number
 
     '''
-    return part[0][-1]
+    return int(part[0][-1])
 
 def _turn_into_number(temp_l):
     '''
@@ -134,54 +134,46 @@ def _turn_into_number(temp_l):
                 val = b
     return val
 
-def _parse_tax_ID(part, ranks):
-    rank_tax_ids = {}
-    
-    for line in part:
-        t_l = re.split("\t| +", line)
-        for rank in ranks:
-            if rank in t_l:
-                print(t_l)
-                val = _turn_into_number(t_l)
-                rank_tax_ids[rank] = {t_l[0] : val}
-    return rank_tax_ids
-
-def _parse_rank(rank_list, ranks):
-    '''
-
-    Parameters
-    ----------
-    rank_list : list
-        contains dictionaries where the key is a tax_id and the value is the 
-        corresponding abundance.
-    ranks : list
-        contains strings of the taxonomic ranks, in order
-
-    Returns
-    -------
-    sample_ranks : Tdictionary
-        where the taxonomic rank (string) is the key and a dictionary of
-        {tax_id : abundance} is the value
-
-    '''
-    sample_ranks = {}
-    
-    for i in range(len(rank_list)):
-        sample_ranks[ranks[i]] = rank_list[i]
-    return sample_ranks
-
 def _get_ranks(content):
     ranks = []
     
-    for line in content:
-        if "@Ranks" in line:
-            r = line.split(":")
+    for element in content:
+        if "@Ranks" in element:
+            r = element.split(":")
             ranks = r[1].split("|")
-            ranks[-1] = ranks[-1].replace("\n", "")
+            last = ranks[-1]
+            ranks[-1] =  last.strip()
             break
     return ranks
 
-def parse_data(parts):
+def _parse_rank(rank, part):
+    tax_id_holder = {}
+    
+    for line in part:
+        t_l = re.split("\t| +", line)
+        if rank in t_l:
+            val = _turn_into_number(t_l)
+            tax_id_holder[t_l[0]] = val
+    
+    return tax_id_holder
+
+def _parse_tax_IDs(part, ranks, t=0):
+    
+    if t == 0:
+        rank_tax_ids = {}
+        for r in ranks:
+            rank_tax_ids[r] = _parse_rank(r, part)
+    elif t == 1:
+        rank_tax_ids = {}
+        for line in part:
+            t_l = re.split("\t| +", line)
+            for rank in ranks:
+                if rank in t_l:
+                    rank_tax_ids[int(t_l[0])] = [rank, t_l[3]]
+            
+    return rank_tax_ids
+
+def parse_data(parts, t):
     '''
 
     Parameters
@@ -197,19 +189,16 @@ def parse_data(parts):
 
     '''
     samples = {}
-    ranks = _get_ranks(parts[0])
     
     for p in parts:
+        ranks = _get_ranks(p)
         sn = _get_sample_number(p)
         
-        parsed_data = _parse_tax_id(p)
-        sample_ranks = _parse_rank(parsed_data, ranks)
-        
-        samples[sn] = sample_ranks
-            
+        parsed_taxID = _parse_tax_IDs(p, ranks, t)
+        samples[sn] = parsed_taxID
     return samples
 
-def print_sample(s_num, sample):
+def print_sample(samples):
     '''
 
     Parameters
@@ -225,14 +214,15 @@ def print_sample(s_num, sample):
     None.
 
     '''
-    print("Sample Number:", s_num)
-    for rank in sample:
-        print("\tRank:", rank)
-        for tax_id in sample[rank]:
-            print("\t\t\t{}\t:\t{}".format(tax_id, sample[rank][tax_id]))
+    for sample_num in samples:
+        print("Sample Number:", sample_num)
+        for rank in samples[sample_num]:
+            print("\tRank:", rank)
+            for tax_id in samples[sample_num][rank]:
+                print("\t\t{} - {}".format(tax_id, samples[sample_num][rank][tax_id]))
     return
 
-def main(f):
+def main(f, t=0):
     '''
     # For when this file isn't being directly run
 
@@ -249,8 +239,8 @@ def main(f):
         is the value (see Data Tree under 'VARIABLES' section)
 
     '''
-    samples = parse_data(divide_content(get_file(f)))
-    print("done.")
+    samples = parse_data(divide_content(get_file(f)), t)
+    #print("done (pp).")
     return samples
 
 
@@ -261,9 +251,5 @@ if __name__ == "__main__":
     f = input("Which file: \n")
     Samples = main(f)
     '''
-    c = get_file("pred")
-    con = divide_content(c)
     
-    
-    print(_parse_tax_ID(con[0], _get_ranks(c)))
     
