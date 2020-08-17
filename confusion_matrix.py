@@ -360,14 +360,21 @@ def print_matrix(matrix):
 
     '''
     # For viewing
+    # [TP, FN, FP, TN]
     
+    list_tid = []
     for tax_id in matrix:
-        print("Tax ID:", tax_id)
-        print("\t\t\tPREDICTED")
-        print("\t\t\t(+)\t(-)")
-        print("\t\t(+)\t{}\t{}".format(matrix[tax_id][0], matrix[tax_id][1]))
-        print("TRUTH")
-        print("\t\t(-)\t{}\t{}\n".format(matrix[tax_id][2], matrix[tax_id][3]))
+        list_tid.append(tax_id)
+    
+    list_tid.sort()
+    
+    for e in list_tid:
+        print("Tax ID:", e)
+        print("\t\t\t\tPREDICTED")
+        print("\t\t\t\t(+)\t(-)")
+        print("\t\t\t(T)\t{}\t{}".format(matrix[e][0], matrix[e][3]))
+        print("\tTRUTH")
+        print("\t\t\t(F)\t{}\t{}\n".format(matrix[e][2], matrix[e][1]))
     return
 
 def _matrix_table(matrix):
@@ -389,14 +396,14 @@ def _matrix_table(matrix):
     global Truth
     truth_other = comp.pp.main(Truth, 1)
     other_info = {}
-    whole_matrix = []
+    whole_matrix = {}
     
     for sample in truth_other:
         for tax_id in truth_other[sample]:
             other_info[tax_id] = truth_other[sample][tax_id]
     
     for tax_id in matrix:
-        whole_matrix.append({tax_id : (other_info[tax_id]) + list(matrix[tax_id])})
+        whole_matrix[tax_id] = np.array((other_info[tax_id]) + list(matrix[tax_id]))
     
     return whole_matrix
 
@@ -413,15 +420,14 @@ def print_matrix_table(matrix_table):
     None.
 
     '''
-    '''
     cols = ["Rank", "Name", "TP", "FN", "FP", "TN"]
-    matrix_data_frame = pan.DataFrame(data=matrix_table, columns=cols, dtype=str)
-    print(matrix_data_frame.values)
-    '''
-    print("{:^10}{:^10}{:^10}{:^10}{:^10}{:^10}{:^10}".format("Tax_id", "Rank", "Name", "TP", "FN", "FP", "TN"))
-    for d in matrix_table:
-        for tax_id in d:
-            print("{:^10}{:^10}{:^10}{:^10}{:^10}{:^10}{:^10}".format(tax_id, d[tax_id][0], d[tax_id][1], d[tax_id][2], d[tax_id][3], d[tax_id][4], d[tax_id][5]))
+    sorted_matrix_table = {}
+    m_t_keys = sorted(matrix_table)
+    for k in m_t_keys:
+        sorted_matrix_table[k] = matrix_table[k]
+    
+    m = pan.DataFrame.from_dict(sorted_matrix_table, orient='index', columns=cols)
+    print(m)
     return
 
 def example1():
@@ -439,8 +445,8 @@ def example1():
     return
 
 def example2():
-    a = {1: {1,2,3}, 2: {4,5,6}, 3 : {1,2,3}}    #example truth
-    b = {1: {1,2}, 2: {3,5,6,7}, 3: {1,2,3}}      #example predicted
+    a = {1: {1,2,3}, 2: {4,5,6}, 3 : {7,8,9}}    #example truth
+    b = {1: {1,2,8}, 2: {3,5,6,7}, 3: {9,10}}      #example predicted
     print("truth: \t\t{}\npredicted: \t{}\n".format(a, b))
     
     common_AB = comp.common_tax_ID(a, b)
@@ -469,4 +475,5 @@ if __name__ == "__main__":
     #example2()
     
     print_matrix_table(_matrix_table(main(Truth)))
+    print_matrix(main(Truth))
     
