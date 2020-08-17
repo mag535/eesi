@@ -8,7 +8,7 @@ Created on Thu Aug 13 15:26:55 2020
 #%% VAIABLES AND IMPORTS
 
 import numpy as np
-import pandas as pan
+import pandas as pd
 import comparator as comp
 
 Truth = "truth"
@@ -345,7 +345,7 @@ def main(pred, t=0):
     matrix = confusion_matrix(truth, predicted, common, combined)
     return matrix
 
-def print_matrix(matrix):
+def print_matrix_chart(matrix):
     '''
 
     Parameters
@@ -377,7 +377,7 @@ def print_matrix(matrix):
         print("\t\t\t(F)\t{}\t{}\n".format(matrix[e][2], matrix[e][1]))
     return
 
-def _matrix_table(matrix):
+def add_other_info(matrix):
     '''
 
     Parameters
@@ -407,7 +407,40 @@ def _matrix_table(matrix):
     
     return whole_matrix
 
-def print_matrix_table(matrix_table):
+def reformat_matrix(whole_matrix):
+    reformatted_matrix = {}
+    sorted_matrix_table = {}
+    rank_list = []
+    name_list = []
+    TP_list = []
+    FN_list = []
+    FP_list = []
+    TN_list = []
+    
+    m_t_keys = sorted(whole_matrix)
+    for k in m_t_keys:
+        sorted_matrix_table[k] = whole_matrix[k]
+    
+    # saving tax_ids
+    reformatted_matrix["Tax ID"] = list(sorted_matrix_table.keys())
+    #saving other info
+    for k in sorted_matrix_table:
+        rank_list.append(sorted_matrix_table[k][0])
+        name_list.append(sorted_matrix_table[k][1])
+        TP_list.append(sorted_matrix_table[k][2])
+        FN_list.append(sorted_matrix_table[k][3])
+        FP_list.append(sorted_matrix_table[k][4])
+        TN_list.append(sorted_matrix_table[k][5])
+    
+    reformatted_matrix["Rank"] = rank_list
+    reformatted_matrix["Name"] = name_list
+    reformatted_matrix["TP"] = TP_list
+    reformatted_matrix["FN"] = FN_list
+    reformatted_matrix["FP"] = FP_list
+    reformatted_matrix["TN"] = TN_list
+    return reformatted_matrix
+
+def create_matrix_table(reformatted_matrix):
     '''
 
     Parameters
@@ -420,14 +453,12 @@ def print_matrix_table(matrix_table):
     None.
 
     '''
-    cols = ["Rank", "Name", "TP", "FN", "FP", "TN"]
-    sorted_matrix_table = {}
-    m_t_keys = sorted(matrix_table)
-    for k in m_t_keys:
-        sorted_matrix_table[k] = matrix_table[k]
-    
-    m = pan.DataFrame.from_dict(sorted_matrix_table, orient='index', columns=cols)
-    print(m)
+    m = pd.DataFrame.from_dict(reformatted_matrix)
+    return m
+
+def save_matrix_table(matrix_table):
+    export_file_path = input("Enter file name: \n")
+    matrix_table.to_csv (export_file_path+".csv", index = False, header=True)
     return
 
 def example1():
@@ -452,7 +483,31 @@ def example2():
     common_AB = comp.common_tax_ID(a, b)
     combined_AB = comp.combine_tax_ID(a, b)
     
-    print_matrix(confusion_matrix(a, b, common_AB, combined_AB))
+    print_matrix_chart(confusion_matrix(a, b, common_AB, combined_AB))
+    return
+
+def example3():
+    m1 = main("pred")
+    m2 = main(Truth)
+    
+    print("PREDICTED:\n")
+    print_matrix_chart(m1)
+    
+    print()
+    
+    print("Predicted:")
+    create_matrix_table(add_other_info(m1))
+    print("\nTruth:")
+    create_matrix_table(add_other_info(m2))
+    return
+
+def example4():
+    matrix = main("truth")
+    matrix_plus = add_other_info(matrix)
+    reformated_matrix_plus = reformat_matrix(matrix_plus)
+    re_matrix_plus_table = create_matrix_table(reformated_matrix_plus)
+    
+    save_matrix_table(re_matrix_plus_table)
     return
 
 
@@ -468,12 +523,12 @@ if __name__ == "__main__":
     
     matrix = confusion_matrix(truth, predicted, common, combined)
     
-    print_matrix(matrix)
+    print_matrix_chart(matrix)
     '''
     
     #example1()
     #example2()
     
-    print_matrix_table(_matrix_table(main(Truth)))
-    print_matrix(main(Truth))
-    
+    #example3()
+    example4()
+        
