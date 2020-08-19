@@ -226,7 +226,7 @@ class Confusion():
         false_positives = {}
     
         for tax_id in combined_set:
-            false_positives[tax_id] =self. _check_false_positives(tax_id, truth, predicted)
+            false_positives[tax_id] = self. _check_false_positives(tax_id, truth, predicted)
         return false_positives
 
     def _check_true_negatives(self, tax_id, truth, predicted):
@@ -352,7 +352,7 @@ class Confusion():
     
         matrix = self.confusion_matrix(truth, predicted, common, combined)
         
-        self.save_matrix_table(self.create_matrix_table(self.reformat_matrix(self.add_other_info(matrix))))
+        #self.save_matrix_table(self.create_matrix_table(self.reformat_matrix(self.add_other_info(matrix))))
         return matrix
 
     def print_matrix_chart(self, matrix):
@@ -408,15 +408,15 @@ class Confusion():
         truth_other = Chai.main(Truth, 1)
         other_info = {}
         whole_matrix = {}
-    
+        
         for sample in truth_other:
             for tax_id in truth_other[sample]:
                 other_info[tax_id] = truth_other[sample][tax_id]
-    
+        
         for tax_id in matrix:
             whole_matrix[tax_id] = np.array((other_info[tax_id]) + list(matrix[tax_id]))
         
-        return whole_matrix
+        return #whole_matrix
 
     def reformat_matrix(self, whole_matrix):
         reformatted_matrix = {}
@@ -521,7 +521,6 @@ def example3():
     return
 
 def example4():
-    Tea = comp.Comparator()
     Juice = Confusion()
     
     matrix = Juice.main("truth")
@@ -536,21 +535,27 @@ def example4():
 #%% MAIN
 
 if __name__ == "__main__":
-    '''
     Chai = comp.pp.Parser()
     Tea = comp.Comparator()
     Juice = Confusion()
-    
+    '''
     truth_file = input("What is the truth file (do not add \'{}.profile\)?\n")
     Truth = truth_file
+    '''
     
     file = input("Enter the file you're adding to the confusion matrix with \'{}.profile\' (only type file name before \'.profile\':\n".format(Truth))
+    
+    '''
     truth = Tea.save_tax_ID(Chai.main(Truth, 0))
     predicted = Tea.save_tax_ID(Chai.main(file, 0))
     
     common, combined = Tea.main(Truth, file, 0)
+    '''
     
+    Juice.add_other_info(Juice.main(file, 0))
+    '''
     matrix = Juice.confusion_matrix(truth, predicted, common, combined)
     rf_matrix = Juice.reformat_matrix(Juice.add_other_info(matrix))
-    print(Juice.create_matrix_table(rf_matrix))
+    #print(Juice.create_matrix_table(rf_matrix))
     '''
+    

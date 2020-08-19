@@ -22,6 +22,7 @@ Data Tree:
 class Comparator():
     def __init__(self):
         return
+    
     def get_tax_ID(self, sample):
         '''
     
@@ -186,7 +187,6 @@ class Comparator():
     
         common_1_2 = self.common_tax_ID(t1, t2)
         combined_1_2 = self.combine_tax_ID(t1, t2)
-        #print("done (comp).")
         return common_1_2, combined_1_2
 
     def print_tax_ID(self, tax_id):

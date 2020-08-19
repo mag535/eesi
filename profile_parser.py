@@ -166,7 +166,7 @@ class Parser():
             t_l = re.split("\t| +", line)
             if rank in t_l:
                 val = self._turn_into_number(t_l)
-                tax_id_holder[t_l[0]] = val
+                tax_id_holder[int(t_l[0])] = val
     
         return tax_id_holder
 
@@ -205,7 +205,7 @@ class Parser():
             
         return rank_tax_ids
 
-    def parse_data(self, parts, t):
+    def parse_data(self, parts, t=0):
         '''
 
         Parameters
@@ -230,9 +230,10 @@ class Parser():
         
             parsed_taxID = self._parse_tax_IDs(p, ranks, t)
             samples[sn] = parsed_taxID
+        print(samples)
         return samples
 
-    def print_sample(self, samples):
+    def print_samples(self, samples):
         '''
 
         Parameters
@@ -287,4 +288,7 @@ if __name__ == "__main__":
     Samples = Chai.main(f)
     Chai.print_sample(Samples)
     '''
+    Chai = Parser()
+    print(Chai.main("pred", 0))
+    print(Chai.main("pred", 1))
     
