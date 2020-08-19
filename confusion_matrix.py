@@ -561,6 +561,5 @@ if __name__ == "__main__":
     j_matrix = Juice1.main()
     print(Juice1.check_matrix_error(j_matrix))
     '''
-    example5()
     
     
