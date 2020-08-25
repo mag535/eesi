@@ -62,7 +62,6 @@ class Parser():
 
         '''
         parts = []
-    
         try:
             content_str = ""
             for l in content:
@@ -73,7 +72,6 @@ class Parser():
                 parts.append(p.split("\n"))
         except:
             print("an error occured in *div_content()*.")
-    
         return parts
 
     def _get_sample_number(self, part):
@@ -163,7 +161,11 @@ class Parser():
         tax_id_holder = {}
     
         for line in part:
-            t_l = re.split("\t| +", line)
+            t = re.split("\t| +", line)
+            t_l = []
+            for e in range(len(t)):
+                if len(t[e]) > 0:
+                    t_l.append(t[e])
             if rank in t_l:
                 val = self._turn_into_number(t_l)
                 tax_id_holder[int(t_l[0])] = val
@@ -230,10 +232,9 @@ class Parser():
         
             parsed_taxID = self._parse_tax_IDs(p, ranks, t)
             samples[sn] = parsed_taxID
-        print(samples)
         return samples
 
-    def print_samples(self, samples):
+    def print_samples(self, samples, t=0):
         '''
 
         Parameters
@@ -247,12 +248,19 @@ class Parser():
         None.
 
         '''
-        for sample_num in samples:
-            print("Sample Number:", sample_num)
-            for rank in samples[sample_num]:
-                print("\tRank:", rank)
-                for tax_id in samples[sample_num][rank]:
-                    print("\t\t{} - {}".format(tax_id, samples[sample_num][rank][tax_id]))
+        if t == 0:
+            for sample_num in samples:
+                print("Sample Number:", sample_num)
+                for rank in samples[sample_num]:
+                    print("\tRank:", rank)
+                    for tax_id in samples[sample_num][rank]:
+                        print("\t\t{} - {}".format(tax_id, samples[sample_num][rank][tax_id]))
+        elif t ==1:
+            for sample_num in samples:
+                print("Sample Number:", sample_num)
+                for tax_id in samples[sample_num]:
+                    print("\tTax ID:", tax_id)
+                    print("\t\tRank - {}, Name - {}".format(samples[sample_num][tax_id][0], samples[sample_num][tax_id][1]))
         return
 
     def main(self, f, t=0):
