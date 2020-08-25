@@ -9,9 +9,7 @@ Created on Thu Aug 13 15:26:55 2020
 
 import numpy as np
 import pandas as pd
-import comparator as comp
-
-Truth = "A_1"
+import MoC.comparator as comp
 
 '''
  matrix -> Tax_ID: [ TP | FN | FP | TN]
@@ -29,8 +27,23 @@ Data Tree:
 #%% CLASS
 
 class Confusion():
-    def __init__(self, fn):
+    def __init__(self, tru, fn):
+        self.truth = tru
         self.file_name = fn
+        return
+    
+    # GETTERS
+    def get_file_name(self):
+        return self.file_name
+    def get_truth(self):
+        return self.truth
+    
+    # SETTERS
+    def set_file_name(self, fn):
+        self.file_name = fn
+        return
+    def set_truth(self, tru):
+        self.truth = tru
         return
     
     def dictionary_to_set(self, d):
@@ -80,7 +93,7 @@ class Confusion():
                 true_positive += 1
         return true_positive
 
-    def check_true_positives(self, truth, predicted, common):
+    def check_true_positives(self, truth, predicted, combined_set):
         '''
 
         Parameters
@@ -106,9 +119,8 @@ class Confusion():
         '''
         true_positives = {}
     
-        for sample_num in common:
-            for tax_id in common[sample_num]:
-                true_positives[tax_id] = self._check_true_positives(tax_id, truth, predicted)
+        for tax_id in combined_set:
+            true_positives[tax_id] = self._check_true_positives(tax_id, truth, predicted)
         return true_positives
 
     def _check_false_negatives(self, tax_id, truth, predicted):
@@ -304,7 +316,7 @@ class Confusion():
     
         combined_set = self.dictionary_to_set(combined)      # universal set
     
-        True_Pos = self.check_true_positives(truth, predicted, common)
+        True_Pos = self.check_true_positives(truth, predicted, combined_set)
         False_Neg = self.check_false_negatives(truth, predicted, combined_set)
         False_Pos = self.check_false_positives(truth, predicted, combined_set)
         True_Neg = self.check_true_negatives(truth, predicted, combined_set)
@@ -313,21 +325,6 @@ class Confusion():
             m = np.array([True_Pos[tax_id], False_Neg[tax_id], False_Pos[tax_id], True_Neg[tax_id]])
             matrix[int(tax_id)] = m
         return matrix
-
-    def check_matrix_error(self, matrix):
-        global Truth
-        tax_ID_error_over = []
-        tax_ID_error_under = []
-        Chai = comp.pp.Parser()
-        truth_sample_sum = len(Chai.divide_content(Chai.get_file(Truth)))
-        
-        for tax_id in matrix:
-            confusion_sum = np.sum(matrix[tax_id])
-            if confusion_sum < truth_sample_sum:
-                tax_ID_error_under.append(tax_id)
-            elif confusion_sum > truth_sample_sum:
-                tax_ID_error_over.append(tax_id)
-        return tax_ID_error_over, tax_ID_error_under
 
     def main(self, t=0):
         Tea = comp.Comparator()
@@ -349,18 +346,34 @@ class Confusion():
             negatives, false positives, and true negatives is the value
 
         '''
-        global Truth
-        truth_file = input("What is the truth file (do not add \'.profile\')?\n")
-        Truth = truth_file
-        truth = Tea.save_tax_ID(Chai.main(Truth, t))
+        truth = Tea.save_tax_ID(Chai.main(self.truth, t))
         predicted = Tea.save_tax_ID(Chai.main(self.file_name, t))
-    
-        common, combined = Tea.main(Truth, self.file_name, t)
+        
+        files = self.truth + " " + self.file_name
+        common = Tea.common_tax_ID(truth, predicted)
+        combined = Tea.combine_tax_ID(truth, predicted)
     
         matrix = self.confusion_matrix(truth, predicted, common, combined)
         
-        self.save_matrix_table(self.create_matrix_table(self.reformat_matrix(self.add_other_info(matrix))))
+        self.save_matrix_table(self.create_matrix_table(self.reformat_matrix(self.add_other_info(matrix))), files)
         return matrix
+    
+    def matrix_sum(self):
+        Chai = comp.pp.Parser()
+        truth_sample_sum = len(Chai.divide_content(Chai.get_file(self.truth)))
+        return truth_sample_sum
+    def check_matrix_error(self, matrix):
+        tax_ID_error_over = []
+        tax_ID_error_under = []
+        truth_sample_sum = self.matrix_sum()
+        
+        for tax_id in matrix:
+            confusion_sum = np.sum(matrix[tax_id])
+            if confusion_sum < truth_sample_sum:
+                tax_ID_error_under.append(tax_id)
+            elif confusion_sum > truth_sample_sum:
+                tax_ID_error_over.append(tax_id)
+        return tax_ID_error_over, tax_ID_error_under
 
     def print_matrix_chart(self, matrix):
         '''
@@ -411,8 +424,7 @@ class Confusion():
             [rank, name, abundance, TP, FN, FP, TN] is the value
 
         '''
-        global Truth
-        truth_other = Chai.main(Truth, 1)
+        truth_other = Chai.main(self.truth, 1)
         this_other = Chai.main(self.file_name, 1)
         other_info = {}
         whole_matrix = {}
@@ -478,14 +490,14 @@ class Confusion():
         m = pd.DataFrame.from_dict(reformatted_matrix)
         return m
 
-    def save_matrix_table(self, matrix_table):
-        export_file_path = input("Enter a name to save matrix to a .csv file: \n")
+    def save_matrix_table(self, matrix_table, csv_name):
+        export_file_path = csv_name.replace(" ", "--")
         matrix_table.to_csv (export_file_path+".csv", index = False, header=True)
         return
 
 def example1():
     Tea = comp.Comparator()
-    Juice = Confusion()
+    Juice = Confusion("truth", "pred")
     
     a = {1: {1,2,3}, 2: {4,5,6}}    #example truth
     b = {1: {1,2}, 2: {3,5,6,7}}      #example predicted
@@ -502,7 +514,7 @@ def example1():
 
 def example2():
     Tea = comp.Comparator()
-    Juice = Confusion()
+    Juice = Confusion("truth", "pred")
     
     a = {1: {1,2,3}, 2: {4,5,6}, 3 : {7,8,9}}    #example truth
     b = {1: {1,2,8}, 2: {3,5,6,7}, 3: {9,10}}      #example predicted
@@ -515,10 +527,10 @@ def example2():
     return
 
 def example3():
-    Juice = Confusion()
+    Juice = Confusion("truth", "pred")
     
-    m1 = Juice.main("pred")
-    m2 = Juice.main("truth")
+    m1 = Juice.main()
+    m2 = Juice.main()
     
     print("PREDICTED:\n")
     Juice.print_matrix_chart(m1)
@@ -532,9 +544,9 @@ def example3():
     return
 
 def example4():
-    Juice = Confusion()
+    Juice = Confusion("truth", "pred")
     
-    matrix = Juice.main("truth")
+    matrix = Juice.main()
     matrix_plus = Juice.add_other_info(matrix)
     reformated_matrix_plus = Juice.reformat_matrix(matrix_plus)
     re_matrix_plus_table = Juice.create_matrix_table(reformated_matrix_plus)
@@ -543,7 +555,7 @@ def example4():
     return
 
 def example5():
-    Juice2 = Confusion("B_1")
+    Juice2 = Confusion("A_1", "B_1")
     j2_matrix = Juice2.main()
     
     over, under = Juice2.check_matrix_error(j2_matrix)
@@ -555,11 +567,11 @@ def example5():
 
 if __name__ == "__main__":
     '''
-    file = input("Enter the file you're adding to the confusion matrix with \'{}.profile\' (only type file name before \'.profile\':\n".format(Truth))
-    Juice1 = Confusion(file)
+    Juice = Confusion("truth", "pred")
     
-    j_matrix = Juice1.main()
-    print(Juice1.check_matrix_error(j_matrix))
+    m = Juice.main()
+    
+    print(Juice.check_matrix_error(m))
     '''
     
     
