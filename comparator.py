@@ -7,7 +7,7 @@ Created on Tue Aug 11 09:38:24 2020
 
 #%% VARIABLES & IMPORTS
 
-import profile_parser as pp
+import MoC.profile_parser as pp
 
 # samples [sample #] [rank] [taxid] --->> Abundance
 '''
@@ -158,7 +158,7 @@ class Comparator():
         #print("done listing")
         return combined_tax_IDs
 
-    def main(self, file1, file2, t=0):
+    def main(self, files, t=0):
         Chai = pp.Parser()
         '''
 
@@ -179,8 +179,9 @@ class Comparator():
             two files is the value (no repeats)
 
         '''
-        Sample1 = Chai.main(file1, t)
-        Sample2 = Chai.main(file2, t)
+        files = files.split(" ")
+        Sample1 = Chai.main(files[0], t)
+        Sample2 = Chai.main(files[1], t)
     
         t1 = self.save_tax_ID(Sample1)
         t2 = self.save_tax_ID(Sample2)
@@ -237,19 +238,9 @@ def example():
 if __name__ == "__main__":
     '''
     Tea = Comparator()
-    Chai = pp.Parser()
     
-    f = input("Which two files do you want to compare \n (only type file name before \'.profile\' and separate by space):\n")
-    f_2 = f.split(" ")
-    S1 = Chai.main(f_2[0], 0)
-    S2 = Chai.main(f_2[1], 0)
-    
-    t1 = Tea.save_tax_ID(S1)
-    t2 = Tea.save_tax_ID(S2)
-    
-    comT = Tea.common_tax_ID(t1, t2)
-    combT = Tea.combine_tax_ID(t1, t2)
+    com, comb = Tea.main("truth pred")
+    print(com)
+    print()
+    print(comb)
     '''
-    
-    #example()
-    
