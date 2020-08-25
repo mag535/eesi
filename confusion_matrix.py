@@ -326,7 +326,7 @@ class Confusion():
             matrix[int(tax_id)] = m
         return matrix
 
-    def main(self, t=0):
+    def main(self, csv="yes", t=0):
         Tea = comp.Comparator()
         Chai = comp.pp.Parser()
         '''
@@ -355,7 +355,8 @@ class Confusion():
     
         matrix = self.confusion_matrix(truth, predicted, common, combined)
         
-        self.save_matrix_table(self.create_matrix_table(self.reformat_matrix(self.add_other_info(matrix))), files)
+        if csv.lower() == "yes":
+            self.save_matrix_table(self.create_matrix_table(self.reformat_matrix(self.add_other_info(matrix))), files)
         return matrix
     
     def matrix_sum(self):
@@ -491,7 +492,18 @@ class Confusion():
         return m
 
     def save_matrix_table(self, matrix_table, csv_name):
-        export_file_path = csv_name.replace(" ", "--")
+        export_file_path = ''
+        s_list = []
+        for l in csv_name:
+            s_list.append(l)
+        s_list.reverse()
+        for l in range(len(s_list)):
+            if s_list[l] == " ":
+                s_list[l] = "--"
+                break
+        s_list.reverse()
+        for l in s_list:
+            export_file_path += l
         matrix_table.to_csv (export_file_path+".csv", index = False, header=True)
         return
 
@@ -569,7 +581,7 @@ if __name__ == "__main__":
     '''
     Juice = Confusion("truth", "pred")
     
-    m = Juice.main()
+    m = Juice.main("yes")
     
     print(Juice.check_matrix_error(m))
     '''

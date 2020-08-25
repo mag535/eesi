@@ -139,13 +139,13 @@ class Misc():
             
         return
     
-    def save_matrices_as_csv(self):
+    def save_matrices_as_csv(self, file_path):
         Juice = cm.Confusion(self.cm_truth, "")
         for name in self.matrix_dict:
             if self.saved[name] == False:
                 Juice.set_file_name(name)
                 self.create_table(name)
-                csv_name = self.cm_truth + " " + name
+                csv_name = file_path + self.cm_truth + " " + name
                 Juice.save_matrix_table(self.matrix_tables[name], csv_name)
         return
     
@@ -277,10 +277,10 @@ class Misc():
         recall_df = pd.DataFrame.from_dict(sorted_recall, orient="index")
         return tp_df, fn_df, fp_df, tn_df, precision_df, recall_df
     
-    def save_as_excel(self, excel_name):
+    def save_as_excel(self, file_path, file_name):
         tp, fn, fp, tn, precision, recall = self.organize_matrix()
         
-        excel_name += ".xlsx"
+        excel_name = file_path + file_name + ".xlsx"
         
         with pd.ExcelWriter(excel_name) as writer:
             tp.to_excel(writer, sheet_name="True Positives")
@@ -295,25 +295,27 @@ class Misc():
         return
     
     
-    def main(self, names, excel_name="Default_excel_name", csv="no"):
+    def main(self, names, file_path="", excel_name="Default_excel_name", csv="no"):
         Juice = cm.Confusion(names[0], "")
         self.set_truth(names[0])
         
         for n in names:
             Juice.set_file_name(n)
-            self.add_matrix(n, Juice.main())
-        
+            self.add_matrix(n, Juice.main("no"))
+            
         if csv.lower() == "yes":
-            self.save_matrices_as_csv()
-        
-        self.save_as_excel(excel_name)
+            self.save_matrices_as_csv(file_path)
+            
+        self.save_as_excel(file_path, excel_name)
         return
 
 
 #%% MAIN
 
 if __name__ == "__main__":
+    '''
     Choco = Misc()
     
-    Choco.main(["A_1", "B_1", "C_1", "C_2", "C_3"], "Yerp")
+    Choco.main(["truth", "pred", "pred2", "pred3"], "C:\\Users\\milkg\\Documents\\", "Derp_Test", "yes")
+    '''
     
