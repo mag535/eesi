@@ -65,6 +65,7 @@ class Misc():
         self.matrix_tables = {}
         self.saved = {}
         self.cm_truth = ""
+        self.input_path = ""
         return
     
     # GETTERS
@@ -79,9 +80,14 @@ class Misc():
         for m in self.matrix_dict:
             names_list.append(m)
         return names_list
+    def get_input_path(self):
+        return self.input_path
     
     def set_truth(self, truth):
         self.cm_truth = truth
+        return
+    def set_input_path(self, ip):
+        self.input_path = ip
         return
       
     def add_matrix(self, name, matrix):
@@ -112,14 +118,14 @@ class Misc():
         return
     
     def create_table(self, name=""):
-        Juice = cm.Confusion(self.cm_truth, "")
+        Juice = cm.Confusion(self.input_path + self.cm_truth, "")
         if name == "":
             for name in self.matrix_dict:
                 if name not in self.matrix_tables:
-                    Juice.set_file_name(name)
+                    Juice.set_file_name(self.input_path + name)
                     self.matrix_tables[name] = Juice.create_matrix_table(Juice.reformat_matrix(Juice.add_other_info(self.matrix_dict[name])))
         elif name in self.matrix_dict:
-            Juice.set_file_name(name)
+            Juice.set_file_name(self.input_path + name)
             self.matrix_tables[name] = Juice.create_matrix_table(Juice.reformat_matrix(Juice.add_other_info(self.matrix_dict[name])))
         else:
             print("There is no matrix by the name \'{}\'".format(name))
@@ -140,10 +146,10 @@ class Misc():
         return
     
     def save_matrices_as_csv(self, file_path):
-        Juice = cm.Confusion(self.cm_truth, "")
+        Juice = cm.Confusion(self.input_path + self.cm_truth, "")
         for name in self.matrix_dict:
             if self.saved[name] == False:
-                Juice.set_file_name(name)
+                Juice.set_file_name(self.input_path + name)
                 self.create_table(name)
                 csv_name = file_path + self.cm_truth + " " + name
                 Juice.save_matrix_table(self.matrix_tables[name], csv_name)
@@ -151,7 +157,7 @@ class Misc():
     
     def _get_name_and_rank(self):
         Chai = cm.comp.pp.Parser()
-        truth_other = Chai.main(self.cm_truth, 1)
+        truth_other = Chai.main(self.input_path + self.cm_truth, 1)
         tp = {}
         fn = {}
         fp = {}
@@ -179,7 +185,7 @@ class Misc():
         
         if len(skipped_tax_id) > 0:
             for name in self.matrix_dict:
-                temp_other = Chai.main(name, 1)
+                temp_other = Chai.main(self.input_path + name, 1)
                 for sample_num in temp_other:
                     for tax_id in skipped_tax_id:
                         if tax_id in temp_other[sample_num]:
@@ -227,7 +233,7 @@ class Misc():
         return TN
     
     def _organize_matrix(self):
-        Juice = cm.Confusion(self.cm_truth, "")
+        Juice = cm.Confusion(self.input_path + self.cm_truth, "")
         tp, fn, fp, tn = self._get_name_and_rank()
         
         names = self.get_matrix_names()
@@ -250,6 +256,7 @@ class Misc():
                     FN[tax_id][name] = 0
                 if name not in FP[tax_id]:
                     FP[tax_id][name] = 0
+        
         return TP, FN, FP, TN
     
     def organize_matrix(self):
@@ -295,13 +302,17 @@ class Misc():
         return
     
     
-    def main(self, names, file_path="", excel_name="Default_excel_name", csv="no"):
-        Juice = cm.Confusion(names[0], "")
-        self.set_truth(names[0])
+    def main(self, names, excel_name="Default_excel_name", input_path="", file_path="", csv="no"):
+        self.input_path = input_path
         
-        for n in names:
-            Juice.set_file_name(n)
-            self.add_matrix(n, Juice.main("no"))
+        Juice = cm.Confusion(self.input_path + names[0], "")
+        self.set_truth(names[0])
+        names.pop(0)
+        
+        for n in range(len(names)):
+            names[n] = names[n]
+            Juice.set_file_name(self.input_path + names[n])
+            self.add_matrix(names[n], Juice.main("no"))
             
         if csv.lower() == "yes":
             self.save_matrices_as_csv(file_path)

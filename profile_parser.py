@@ -41,8 +41,7 @@ class Parser():
             containing all the lines of the file as strings
 
         '''
-        filename = f + ".profile"
-        file = open(filename, "r")
+        file = open(f, "r")
         contents = file.readlines()
         file.close()
         return contents
@@ -297,6 +296,6 @@ if __name__ == "__main__":
     Chai.print_sample(Samples)
     '''
     Chai = Parser()
-    print(Chai.main("pred", 0))
-    print(Chai.main("pred", 1))
+    print(Chai.main("pred.profile", 0))
+    print(Chai.main("pred.profile", 1))
     

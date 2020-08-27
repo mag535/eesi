@@ -239,7 +239,7 @@ if __name__ == "__main__":
     '''
     Tea = Comparator()
     
-    com, comb = Tea.main("truth pred")
+    com, comb = Tea.main("truth.profile pred.profile")
     print(com)
     print()
     print(comb)
