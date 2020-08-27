@@ -12,6 +12,7 @@ Calculating precision and recall
 import numpy as np
 import pandas as pd
 import MoC.confusion_matrix as cm
+from glob import glob
 
 
 #%% CLASS
@@ -302,17 +303,18 @@ class Misc():
         return
     
     
-    def main(self, names, excel_name="Default_excel_name", input_path="", file_path="", csv="no"):
-        self.input_path = input_path
+    def main(self, gnd_truth, excel_name="TaxaPerformanceMetrics_byTool", gen_dir="", file_path="", csv="no"):
+        gen_paths = glob(gen_dir + "*.profile")
+        self.input_path = "\\".join((gen_paths[0].split("\\")[0:-1])) + "\\"
         
-        Juice = cm.Confusion(self.input_path + names[0], "")
-        self.set_truth(names[0])
-        names.pop(0)
+        Juice = cm.Confusion(self.input_path + gnd_truth, "")
+        self.set_truth(gnd_truth)
         
-        for n in range(len(names)):
-            names[n] = names[n]
-            Juice.set_file_name(self.input_path + names[n])
-            self.add_matrix(names[n], Juice.main("no"))
+        for path in gen_paths:
+            name = path.split("\\").pop(-1)
+            if name != gnd_truth:
+                Juice.set_file_name(self.input_path + name)
+                self.add_matrix(name, Juice.main("no"))
             
         if csv.lower() == "yes":
             self.save_matrices_as_csv(file_path)
