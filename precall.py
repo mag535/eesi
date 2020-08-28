@@ -9,10 +9,11 @@ Calculating precision and recall
 
 #%% VARIABLES 7 IMPORTS
 
-import numpy as np
 import pandas as pd
 import MoC.confusion_matrix as cm
 from glob import glob
+from openpyxl import load_workbook
+from openpyxl.styles import Font, Alignment
 
 
 #%% CLASS
@@ -258,6 +259,22 @@ class Misc():
                 if name not in FP[tax_id]:
                     FP[tax_id][name] = 0
         
+        for tax_id in TP:
+            total_TP = 0
+            total_FN = 0
+            total_FP = 0
+            total_TN = 0
+            for tool in TP[tax_id]:
+                if (tool != "rank") and (tool != "name"):
+                    total_TP += int(TP[tax_id][tool])
+                    total_FN += FN[tax_id][tool]
+                    total_FP += FP[tax_id][tool]
+                    total_TN += TN[tax_id][tool]
+            TP[tax_id]["Aggregate"] = total_TP
+            FN[tax_id]["Aggregate"] = total_FN
+            FP[tax_id]["Aggregate"] = total_FP
+            TN[tax_id]["Aggregate"] = total_TN
+        
         return TP, FN, FP, TN
     
     def organize_matrix(self):
@@ -285,6 +302,16 @@ class Misc():
         recall_df = pd.DataFrame.from_dict(sorted_recall, orient="index")
         return tp_df, fn_df, fp_df, tn_df, precision_df, recall_df
     
+    def write_col_title(self, path):
+        workbook = load_workbook(path)
+        for name in workbook.sheetnames:
+            sheet = workbook[name]
+            cell = sheet.cell(1,1)
+            cell.value = "Tax ID"
+            cell.font = Font(bold=True)
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+        workbook.save(path)
+        return
     def save_as_excel(self, file_path, file_name):
         tp, fn, fp, tn, precision, recall = self.organize_matrix()
         
@@ -297,7 +324,6 @@ class Misc():
             tn.to_excel(writer, sheet_name="True Negatives")
             precision.to_excel(writer, sheet_name="Precision")
             recall.to_excel(writer, sheet_name="Recall")
-            
             
         print("\nSaved as \'{}\'".format(excel_name))
         return
@@ -320,6 +346,7 @@ class Misc():
             self.save_matrices_as_csv(file_path)
             
         self.save_as_excel(file_path, excel_name)
+        self.write_col_title(file_path + excel_name + ".xlsx")
         return
 
 
